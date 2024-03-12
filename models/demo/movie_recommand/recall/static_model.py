@@ -17,6 +17,7 @@ import paddle
 import paddle.nn.functional as F
 import numpy as np
 from net import DNNLayer
+import pdb
 
 
 class StaticModel():
@@ -65,8 +66,10 @@ class StaticModel():
             self.batch_size = self.config.get("runner.infer_batch_size")
         else:
             self.batch_size = self.config.get("runner.train_batch_size")
+
         recall_model = DNNLayer(self.sparse_feature_number,
                                 self.sparse_feature_dim, self.hidden_layers)
+
         predict = recall_model.forward(
             self.batch_size, self.user_sparse_inputs, self.mov_sparse_inputs,
             self.label_input)

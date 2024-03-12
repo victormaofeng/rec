@@ -1,10 +1,12 @@
-#coding=utf8
-import sys
+# coding=utf8
 import random
-import json
+import sys
+
 from py27hash.hash import hash27
 
+# occupation 职业
 user_fea = ["userid", "gender", "age", "occupation"]
+# genres 电影类型（喜剧、动作）
 movie_fea = ["movieid", "title", "genres"]
 rating_fea = ["userid", "movieid", "rating", "time"]
 dict_size = 600000
@@ -15,6 +17,10 @@ test_user_path = "online_user"
 
 
 def process(path):
+    """
+    打印结果：
+    863726088	time:976071485	userid:545	gender:M	age:35	occupation:17	movieid:2763	title:Thomas Crown Affair, The (1999)	genres:Action Thriller	label:2
+    """
     user_dict = parse_data(data_path + "/users.dat", user_fea)
     movie_dict = parse_movie_data(data_path + "/movies.dat", movie_fea)
 
@@ -65,6 +71,10 @@ def parse_movie_data(file_name, feas):
 
 
 def to_hash(in_str):
+    """
+    将 userid:12
+    变为 userid:hash27(userid:12)%dict_size
+    """
     feas = in_str.split(":")[0]
     arr = in_str.split(":")[1]
     out_str = "%s:%s" % (feas, (arr + arr[::-1] + arr[::-2] + arr[::-3]))
@@ -78,6 +88,12 @@ def to_hash(in_str):
 
 
 def to_hash_list(in_str):
+    """
+    输入:
+     in_str : title:irror man
+    输出:
+    title: hash27(title:irror) hash27(title:man)
+    """
     arr = in_str.split(":")
     tmp_arr = arr[1].split(" ")
     out_str = ""
@@ -90,12 +106,15 @@ def to_hash_list(in_str):
 
 
 def get_hash(path):
-    #0-34831 1-time:974673057 2-userid:2021 3-gender:M 4-age:25 5-occupation:0 6-movieid:1345  7-title:Carrie (1976)  8-genres:Horror  9-label:2
+    """
+    使用 hash27 算法, 对每个属性进行 hash 运算
+    """
+    # 0-34831 1-time:974673057 2-userid:2021 3-gender:M 4-age:25 5-occupation:0 6-movieid:1345  7-title:Carrie (1976)  8-genres:Horror  9-label:2
     for line in open(path, encoding='ISO-8859-1'):
         arr = line.strip().split("\t")
         out_str = "logid:%s %s %s %s %s %s %s %s %s %s" % \
-                 (arr[0], arr[1], to_hash(arr[2]), to_hash(arr[3]), to_hash(arr[4]), to_hash(arr[5]), \
-                 to_hash(arr[6]), to_hash_list(arr[7]), to_hash_list(arr[8]), arr[9])
+                  (arr[0], arr[1], to_hash(arr[2]), to_hash(arr[3]), to_hash(arr[4]), to_hash(arr[5]), \
+                   to_hash(arr[6]), to_hash_list(arr[7]), to_hash_list(arr[8]), arr[9])
         print(out_str)
 
 
@@ -128,14 +147,15 @@ def generate_online_data(path):
         res = "%s\t%s" % (log_id, out_str)
         arr = res.strip().split("\t")
         out_str = "logid:%s %s %s %s %s %s %s %s %s %s" % \
-                (arr[0], arr[1], to_hash(arr[2]), to_hash(arr[3]), to_hash(arr[4]), to_hash(arr[5]), \
-                to_hash(arr[6]), to_hash_list(arr[7]), to_hash_list(arr[8]), arr[9])
+                  (arr[0], arr[1], to_hash(arr[2]), to_hash(arr[3]), to_hash(arr[4]), to_hash(arr[5]), \
+                   to_hash(arr[6]), to_hash_list(arr[7]), to_hash_list(arr[8]), arr[9])
         print(out_str)
 
 
 if __name__ == "__main__":
     random.seed(1111111)
     if sys.argv[1] == "process_raw":
+        # process("./ml-1m/train.dat")
         process(sys.argv[2])
     elif sys.argv[1] == "hash":
         get_hash(sys.argv[2])

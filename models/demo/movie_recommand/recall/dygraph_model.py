@@ -20,6 +20,10 @@ import net
 
 
 class DygraphModel():
+    """
+    内部封装模型，提供了 创建模型、训练、推理等方法，避免了直接操作模型
+    """
+
     # define model
     def create_model(self, config):
         sparse_feature_number = config.get(

@@ -34,7 +34,7 @@ class DNNLayer(nn.Layer):
             weight_attr=paddle.ParamAttr(
                 name="SparseFeatFactors",
                 initializer=paddle.nn.initializer.Uniform()))
-
+        # [512, 256, 128, 32]
         user_sizes = [36] + self.fc_sizes
         acts = ["relu" for _ in range(len(self.fc_sizes))]
         self._user_layers = []
@@ -80,7 +80,7 @@ class DNNLayer(nn.Layer):
 
         mov_sparse_embed_seq = []
         for s_input in mov_sparse_inputs:
-            s_input = paddle.reshape(s_input, shape=[batch_size, -1])
+            # s_input = paddle.reshape(s_input, shape=[batch_size, -1])
             emb = self.embedding(s_input)
             emb = paddle.sum(emb, axis=1)
             emb = paddle.reshape(emb, shape=[-1, self.sparse_feature_dim])

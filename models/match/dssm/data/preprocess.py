@@ -92,7 +92,7 @@ random.shuffle(test_set)
 print("get test_set done")
 
 #训练集中的query,pos,neg转化为词袋
-f = open("train.txt", "w", encoding="utf-8")
+f = open("big_train/train.txt", "w", encoding="utf-8")
 for line in train_set:
     query = jieba.cut(line[0].strip())
     pos = jieba.cut(line[1].strip())
@@ -112,7 +112,7 @@ for line in train_set:
 f.close()
 
 #测试集中的query和pos转化为词袋
-f = open("test.txt", "w", encoding="utf-8")
+f = open("big_test/test.txt", "w", encoding="utf-8")
 fa = open("label.txt", "w", encoding="utf-8")
 for line in test_set:
     query = jieba.cut(line[0].strip())

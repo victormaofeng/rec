@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 def parse_args():
     parser = argparse.ArgumentParser("PaddleRec train static script")
-    parser.add_argument("-m", "--config_yaml", type=str)
+    parser.add_argument("-m", "--config_yaml")
     args = parser.parse_args()
     args.abs_dir = os.path.dirname(os.path.abspath(args.config_yaml))
     args.config_yaml = get_abs_model(args.config_yaml)
@@ -54,9 +54,12 @@ def main(args):
     static_model_class = load_static_model_class(config)
 
     input_data = static_model_class.create_feeds(is_infer=True)
+
     input_data_names = [data.name for data in input_data]
 
     fetch_vars = static_model_class.infer_net(input_data)
+
+
     logger.info("cpu_num: {}".format(os.getenv("CPU_NUM")))
 
     use_gpu = config.get("runner.use_gpu", True)
@@ -77,6 +80,7 @@ def main(args):
 
     place = paddle.set_device('gpu' if use_gpu else 'cpu')
     exe = paddle.static.Executor(place)
+
     # initialize
     exe.run(paddle.static.default_startup_program())
 
@@ -86,10 +90,13 @@ def main(args):
     for epoch_id in range(start_epoch, end_epoch):
         logger.info("load model epoch {}".format(epoch_id))
         model_path = os.path.join(model_load_path, str(epoch_id))
+
+        # 加载模型
         load_static_model(
             paddle.static.default_main_program(),
             model_path,
             prefix='rec_static')
+
         runner_results = []
         epoch_begin = time.time()
         interval_begin = time.time()
@@ -97,10 +104,12 @@ def main(args):
             reset_auc()
         for batch_id, batch_data in enumerate(test_dataloader()):
             batch_runner_result = {}
+
             fetch_batch_var = exe.run(
                 program=paddle.static.default_main_program(),
                 feed=dict(zip(input_data_names, batch_data)),
                 fetch_list=[var for _, var in fetch_vars.items()])
+
             for var_idx, var_name in enumerate(fetch_vars):
                 batch_runner_result[var_name] = np.array(fetch_batch_var[
                     var_idx]).tolist()

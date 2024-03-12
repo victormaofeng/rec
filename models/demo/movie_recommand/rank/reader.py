@@ -39,19 +39,19 @@ class RecDataset(IterableDataset):
                     time = line[1].strip().split(":")[1]
 
                     userid = line[2].strip().split(":")[1]
-                    output_list.append(np.array([int(userid)]))
+                    output_list.append(np.array([int(userid)]).astype("int64"))
 
                     gender = line[3].strip().split(":")[1]
-                    output_list.append(np.array([int(gender)]))
+                    output_list.append(np.array([int(gender)]).astype("int64"))
 
                     age = line[4].strip().split(":")[1]
-                    output_list.append(np.array([int(age)]))
+                    output_list.append(np.array([int(age)]).astype("int64"))
 
                     occupation = line[5].strip().split(":")[1]
-                    output_list.append(np.array([int(occupation)]))
+                    output_list.append(np.array([int(occupation)]).astype("int64"))
 
                     movieid = line[6].strip().split(":")[1]
-                    output_list.append(np.array([int(movieid)]))
+                    output_list.append(np.array([int(movieid)]).astype("int64"))
 
                     title = []
                     genres = []
@@ -60,10 +60,10 @@ class RecDataset(IterableDataset):
                             title.append(int(i.strip().split(":")[1]))
                         if i.strip().split(":")[0] == "genres":
                             genres.append(int(i.strip().split(":")[1]))
-                    output_list.append(np.array(title))
-                    output_list.append(np.array(genres))
+                    output_list.append(np.array(title).astype("int64"))
+                    output_list.append(np.array(genres).astype("int64"))
 
                     label = line[-1].strip().split(":")[1]
-                    output_list.append(np.array([int(label)]))
+                    output_list.append(np.array([int(label)]).astype("int64"))
 
                     yield output_list

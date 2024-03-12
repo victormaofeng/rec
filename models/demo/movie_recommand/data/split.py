@@ -11,11 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+""""
+处理 ml-1m数据集中的rating.dat文件
+将其划分为 训练集 和 测试集
+"""
 
 import random
 
+# line 为 rating.dat 的一行完整数据，str类型
+
+# train = {id:[line]}
+# train 存储的是 用户 除最后一次之外的所有点赞行为
 train = dict()
+
+# test = {id:{content:line,time:time}}
+# test 保存的是 用户 最后一次的 评分行为
 test = dict()
+
 data_path = "ml-1m"
 
 for line in open(data_path + "/ratings.dat"):
@@ -40,6 +52,7 @@ for key in train:
     for line in train[key]:
         train_data.append(line)
 
+# 打乱顺序
 random.shuffle(train_data)
 
 with open(data_path + "/train.dat", 'w') as f:

@@ -45,7 +45,8 @@
 
 ## 数据准备
 ### 数据来源
-训练及测试数据集选用[Display Advertising Challenge](https://www.kaggle.com/c/criteo-display-ad-challenge/)所用的Criteo数据集。该数据集包括两部分：训练集和测试集。训练集包含一段时间内Criteo的部分流量，测试集则对应训练数据后一天的广告点击流量。
+训练及测试数据集选用[Display Advertising Challenge](https://www.kaggle.com/c/criteo-display-ad-challenge/)
+所用的Criteo数据集。该数据集包括两部分：训练集和测试集。训练集包含一段时间内Criteo的部分流量，测试集则对应训练数据后一天的广告点击流量。
 每一行数据格式如下所示：
 ```bash
 <label> <integer feature 1> ... <integer feature 13> <categorical feature 1> ... <categorical feature 26>

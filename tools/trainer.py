@@ -21,7 +21,7 @@ import sys
 import importlib
 
 __dir__ = os.path.dirname(os.path.abspath(__file__))
-#sys.path.append(__dir__)
+# sys.path.append(__dir__)
 sys.path.append(os.path.abspath(os.path.join(__dir__, '..')))
 
 from utils.utils_single import load_yaml, load_dy_model_class, get_abs_model, create_data_loader
@@ -40,6 +40,7 @@ def parse_args():
     parser.add_argument("-m", "--config_yaml", type=str)
     parser.add_argument("-o", "--opt", nargs='*', type=str)
     args = parser.parse_args()
+    # abs_dir 模型文件存放的地址，和config_yaml同一目录
     args.abs_dir = os.path.dirname(os.path.abspath(args.config_yaml))
     args.config_yaml = get_abs_model(args.config_yaml)
     return args
@@ -48,6 +49,7 @@ def parse_args():
 def main(args):
     # load config
     config = load_yaml(args.config_yaml)
+    # 加载 dy_graph_model.py 中的 DygraphModel 模型
     dy_model_class = load_dy_model_class(args.abs_dir)
     config["config_abs_dir"] = args.abs_dir
     # modify config from command
@@ -117,6 +119,7 @@ def main(args):
         dy_model = fleet.distributed_model(dy_model)
 
     logger.info("read data")
+    # 获取data_loader
     train_dataloader = create_data_loader(config=config, place=place)
 
     last_epoch_id = config.get("last_epoch", -1)
@@ -124,9 +127,10 @@ def main(args):
 
     for epoch_id in range(last_epoch_id + 1, epochs):
         # set train mode
+        # 设置模型为训练模式
         dy_model.train()
         metric_list, metric_list_name = dy_model_class.create_metrics()
-        #auc_metric = paddle.metric.Auc("ROC")
+        # auc_metric = paddle.metric.Auc("ROC")
         epoch_begin = time.time()
         interval_begin = time.time()
         train_reader_cost = 0.0
@@ -134,7 +138,7 @@ def main(args):
         total_samples = 0
         reader_start = time.time()
 
-        #we will drop the last incomplete batch when dataset size is not divisible by the batch size
+        # we will drop the last incomplete batch when dataset size is not divisible by the batch size
         assert any(train_dataloader(
         )), "train_dataloader is null, please ensure batch size < dataset size!"
 
@@ -144,11 +148,14 @@ def main(args):
             train_start = time.time()
             batch_size = len(batch[0])
 
+            # 模型推理，得到loss
             loss, metric_list, tensor_print_dict = dy_model_class.train_forward(
                 dy_model, metric_list, batch, config)
 
+            # 梯度下降
             loss.backward()
             optimizer.step()
+
             train_run_cost += time.time() - train_start
             total_samples += batch_size
 
@@ -156,8 +163,8 @@ def main(args):
                 metric_str = ""
                 for metric_id in range(len(metric_list_name)):
                     metric_str += (
-                        metric_list_name[metric_id] +
-                        ":{:.6f}, ".format(metric_list[metric_id].accumulate())
+                            metric_list_name[metric_id] +
+                            ":{:.6f}, ".format(metric_list[metric_id].accumulate())
                     )
                     if use_visual:
                         log_visual.add_scalar(
@@ -168,8 +175,8 @@ def main(args):
                 if tensor_print_dict is not None:
                     for var_name, var in tensor_print_dict.items():
                         tensor_print_str += (
-                            "{}:".format(var_name) +
-                            str(var.numpy()).strip("[]") + ",")
+                                "{}:".format(var_name) +
+                                str(var.numpy()).strip("[]") + ",")
                         if use_visual:
                             log_visual.add_scalar(
                                 tag="train/" + var_name,
@@ -180,9 +187,9 @@ def main(args):
                         epoch_id, batch_id) + metric_str + tensor_print_str +
                     " avg_reader_cost: {:.5f} sec, avg_batch_cost: {:.5f} sec, avg_samples: {:.5f}, ips: {:.5f} ins/s".
                     format(train_reader_cost / print_interval, (
-                        train_reader_cost + train_run_cost) / print_interval,
+                            train_reader_cost + train_run_cost) / print_interval,
                            total_samples / print_interval, total_samples / (
-                               train_reader_cost + train_run_cost + 0.0001)))
+                                   train_reader_cost + train_run_cost + 0.0001)))
                 train_reader_cost = 0.0
                 train_run_cost = 0.0
                 total_samples = 0
@@ -192,8 +199,8 @@ def main(args):
         metric_str = ""
         for metric_id in range(len(metric_list_name)):
             metric_str += (
-                metric_list_name[metric_id] +
-                ": {:.6f},".format(metric_list[metric_id].accumulate()))
+                    metric_list_name[metric_id] +
+                    ": {:.6f},".format(metric_list[metric_id].accumulate()))
             if use_auc:
                 metric_list[metric_id].reset()
 
@@ -201,25 +208,19 @@ def main(args):
         if tensor_print_dict is not None:
             for var_name, var in tensor_print_dict.items():
                 tensor_print_str += (
-                    "{}:".format(var_name) + str(var.numpy()).strip("[]") + ","
+                        "{}:".format(var_name) + str(var.numpy()).strip("[]") + ","
                 )
 
         logger.info("epoch: {} done, ".format(epoch_id) + metric_str +
                     tensor_print_str + " epoch time: {:.2f} s".format(
-                        time.time() - epoch_begin))
+            time.time() - epoch_begin))
 
         if use_fleet:
             trainer_id = paddle.distributed.get_rank()
             if trainer_id == 0:
-                save_model(
-                    dy_model,
-                    optimizer,
-                    model_save_path,
-                    epoch_id,
-                    prefix='rec')
+                save_model(dy_model, optimizer, model_save_path, epoch_id, prefix='rec')
         else:
-            save_model(
-                dy_model, optimizer, model_save_path, epoch_id, prefix='rec')
+            save_model(dy_model, optimizer, model_save_path, epoch_id, prefix='rec')
 
 
 if __name__ == '__main__':

@@ -31,7 +31,8 @@ for i in range(len(result)):
 f.close()
 
 label = []
-filename = '../../../datasets/BQ_dssm/label.txt'
+# filename = '../../../datasets/BQ_dssm/label.txt'
+filename = './label.txt'
 f = open(filename, "r")
 #f.readline()
 num = 0

@@ -97,7 +97,9 @@ def main(args):
     for epoch_id in range(start_epoch, end_epoch):
         logger.info("load model epoch {}".format(epoch_id))
         model_path = os.path.join(model_load_path, str(epoch_id))
+        # 加载模型权重
         load_model(model_path, dy_model)
+        # 设置模型为验证模式
         dy_model.eval()
         runner_results = []
         for batch_id, batch in enumerate(test_dataloader()):
@@ -105,6 +107,8 @@ def main(args):
 
             metric_list, tensor_print_dict, batch_runner_result = dy_model_class.infer_forward(
                 dy_model, metric_list, batch, config)
+
+
             runner_results.append(batch_runner_result)
 
             if batch_id % print_interval == 0:
@@ -142,8 +146,10 @@ def main(args):
                     tensor_print_str + " epoch time: {:.2f} s".format(
                         time.time() - epoch_begin))
 
+        # 获取测试结果保存路径
         runner_result_save_path = config.get("runner.runner_result_dump_path",
                                              None)
+        # 保存测试结果
         if runner_result_save_path:
             logging.info("Dump runner result in {}".format(
                 runner_result_save_path))

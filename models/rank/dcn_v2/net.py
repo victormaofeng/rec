@@ -19,10 +19,25 @@ import math
 
 
 class DCN_V2Layer(nn.Layer):
+    """
+    两种模式：
+    Model Structaul: Stacked or Parallel
+    """
+
     def __init__(self, sparse_feature_number, sparse_feature_dim,
                  dense_feature_dim, sparse_num_field, layer_sizes, cross_num,
                  is_Stacked, use_low_rank_mixture, low_rank, num_experts):
         super(DCN_V2Layer, self).__init__()
+        """
+          离散特征的数量+1
+          sparse_inputs_slots: 27
+          离散取值的范围(个)
+          sparse_feature_number: 1100001
+          离散特征embeding后的向量长度
+          sparse_feature_dim: 40 # 10  40
+          连续特征的数量
+          dense_input_dim: 13
+        """
         self.sparse_feature_number = sparse_feature_number
         self.sparse_feature_dim = sparse_feature_dim
         self.dense_feature_dim = dense_feature_dim
@@ -51,21 +66,23 @@ class DCN_V2Layer(nn.Layer):
                 initializer=paddle.nn.initializer.TruncatedNormal(
                     mean=0.0,
                     std=self.init_value_ /
-                    math.sqrt(float(self.sparse_feature_dim)))))
+                        math.sqrt(float(self.sparse_feature_dim)))))
 
         self.dense_emb = nn.Linear(self.dense_feature_dim, (
-            self.sparse_feature_dim * self.dense_feature_dim))
+                self.sparse_feature_dim * self.dense_feature_dim))
 
-        self.DeepCrossLayer_ = DeepCrossLayer(
+        self.deep_cross_layer = DeepCrossLayer(
             sparse_num_field, sparse_feature_dim, dense_feature_dim, cross_num,
             use_low_rank_mixture, low_rank, num_experts)
 
-        self.DNN_ = DNNLayer(
+        self.dnn_layer = DNNLayer(
             sparse_feature_dim,
             dense_feature_dim,
             sparse_num_field,
             layer_sizes,
             dropout_rate=0.5)
+
+        # fc_sizes: [768, 768]
 
         if self.is_Stacked:
             self.fc = paddle.nn.Linear(
@@ -78,20 +95,20 @@ class DCN_V2Layer(nn.Layer):
         else:
             self.fc = paddle.nn.Linear(
                 in_features=self.layer_sizes[-1] +
-                (dense_feature_dim + sparse_num_field
-                 ) * self.sparse_feature_dim,
+                            (dense_feature_dim + sparse_num_field
+                             ) * self.sparse_feature_dim,
                 out_features=1,
                 weight_attr=paddle.ParamAttr(
                     initializer=paddle.nn.initializer.Normal(
                         std=1.0 / math.sqrt(self.layer_sizes[
-                            -1] + dense_feature_dim * sparse_num_field))))
+                                                -1] + dense_feature_dim * sparse_num_field))))
 
     def forward(self, sparse_inputs, dense_inputs):
         # print("sparse_inputs:",sparse_inputs)
         # print("dense_inputs:",dense_inputs)
         # EmbeddingLayer
         sparse_inputs_concat = paddle.concat(
-            sparse_inputs, axis=1)  #Tensor(shape=[bs, 26])
+            sparse_inputs, axis=1)  # Tensor(shape=[bs, 26])
         sparse_embeddings = self.embedding(
             sparse_inputs_concat)  # shape=[bs, 26, dim]
 
@@ -99,21 +116,21 @@ class DCN_V2Layer(nn.Layer):
 
         sparse_embeddings_re = paddle.reshape(
             sparse_embeddings,
-            shape=[-1, self.sparse_num_field * self.sparse_feature_dim])
+            shape=[-1, self.sparse_num_field * self.sparse_feature_dim]) # shape=[bs, 26*dim]
 
         dense_embeddings = self.dense_emb(
-            dense_inputs)  # # shape=[bs, 13, dim]
+            dense_inputs)  # # shape=[bs, 13*dim]
 
         feat_embeddings = paddle.concat(
-            [sparse_embeddings_re, dense_embeddings], 1)
+            [sparse_embeddings_re, dense_embeddings], 1) # shape=[bs, 39*dim]
         # print("feat_embeddings:",feat_embeddings.shape)
 
         # Model Structaul: Stacked or Parallel
         if self.is_Stacked:
             # CrossNetLayer
-            cross_out = self.DeepCrossLayer_(feat_embeddings)
+            cross_out = self.deep_cross_layer(feat_embeddings)
             # MLPLayer
-            dnn_output = self.DNN_(cross_out)
+            dnn_output = self.dnn_layer(cross_out)
 
             # print('----dnn_output shape----',dnn_output.shape)
 
@@ -122,10 +139,10 @@ class DCN_V2Layer(nn.Layer):
 
         else:
             # CrossNetLayer
-            cross_out = self.DeepCrossLayer_(feat_embeddings)
+            cross_out = self.deep_cross_layer(feat_embeddings)
 
             # MLPLayer
-            dnn_output = self.DNN_(feat_embeddings)
+            dnn_output = self.dnn_layer(feat_embeddings)
 
             last_out = paddle.concat([dnn_output, cross_out], axis=-1)
 
@@ -190,8 +207,8 @@ class DeepCrossLayer(nn.Layer):
         super(DeepCrossLayer, self).__init__()
 
         self.use_low_rank_mixture = use_low_rank_mixture
-        self.input_dim = (
-            sparse_num_field + dense_feature_dim) * sparse_feature_dim
+        # 39 * dim
+        self.input_dim = (sparse_num_field + dense_feature_dim) * sparse_feature_dim
         self.num_experts = num_experts
         self.low_rank = low_rank
         self.cross_num = cross_num
@@ -227,9 +244,11 @@ class CrossNetV2(nn.Layer):
 
 
 class CrossNetMix(nn.Layer):
-    """ CrossNetMix improves CrossNet by:
+    """
+    CrossNetMix improves CrossNet by:
         1. add MOE to learn feature interactions in different subspaces
         2. add nonlinear transformations in low-dimensional space
+    将高秩向量转为低秩向量，减少模型参数
     """
 
     def __init__(self, in_features, layer_num=2, low_rank=32, num_experts=4):

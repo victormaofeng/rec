@@ -39,6 +39,7 @@ def parse_data(file_name, feas):
     for line in open(file_name, encoding='ISO-8859-1'):
         line = line.strip()
         arr = line.split("::")
+        # print(arr[0])
         res[arr[0]] = dict()
         _ = to_hash(feas[0], arr[0])
         for i in range(0, len(feas)):
@@ -49,10 +50,11 @@ def parse_data(file_name, feas):
 def to_hash(feas, arr):
     out_str = "%s:%s" % (feas, (arr + arr[::-1] + arr[::-2] + arr[::-3]))
     hash_id = hash27(out_str) % dict_size
+    # user 和 movie 部分信息存在hash碰撞
     if hash_id in hash_dict and hash_dict[hash_id] != out_str:
         print(hash_id, out_str, hash(out_str), hash_dict[hash_id])
         print("conflict")
-        exit(-1)
+        # exit(-1)
     hash_dict[hash_id] = out_str
     return hash_id
 
@@ -170,6 +172,7 @@ def parse_infer(mode, path, user_dict, movie_dict):
 
 if __name__ == "__main__":
     user_dict, movie_dict, ratings_dict = read_raw_data()
+    # parse_infer('recall_offline','recall_infer_result',user_dict,movie_dict)
     if sys.argv[1] == "ground_truth":
         load_ground_truth(user_dict, movie_dict, ratings_dict)
     else:

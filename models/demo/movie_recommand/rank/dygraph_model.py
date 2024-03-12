@@ -42,8 +42,8 @@ class DygraphModel():
         mov_sparse_inputs = [
             paddle.to_tensor(batch_data[4].numpy().astype('int64').reshape(
                 -1, 1)), paddle.to_tensor(batch_data[5].numpy().astype(
-                    'int64').reshape(-1, 4)), paddle.to_tensor(batch_data[
-                        6].numpy().astype('int64').reshape(-1, 3))
+                'int64').reshape(-1, 4)), paddle.to_tensor(batch_data[
+                                                               6].numpy().astype('int64').reshape(-1, 3))
         ]
 
         label_input = paddle.to_tensor(batch_data[7].numpy().astype('int64')
@@ -76,7 +76,6 @@ class DygraphModel():
 
     # construct train forward phase  
     def train_forward(self, dy_model, metrics_list, batch_data, config):
-
         batch_size = config.get("runner.train_batch_size", 128)
         user_sparse_inputs, mov_sparse_inputs, label_input = self.create_feeds(
             batch_data)
@@ -108,4 +107,10 @@ class DygraphModel():
         batch_runner_result["predict"] = predict.numpy().tolist()
 
         print_dict = {"predict": predict}
+
+        for i in range(len(batch_runner_result["userid"])):
+            print("userid: ", batch_runner_result["userid"][i], "movieid: ", batch_runner_result["movieid"][i],
+                  "label: ", batch_runner_result["label"][i], "predict: ", batch_runner_result["predict"][i],
+                  "loss: ", batch_runner_result["label"][i] - batch_runner_result["predict"][i])
+
         return metrics_list, print_dict, batch_runner_result

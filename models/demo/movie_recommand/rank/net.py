@@ -26,6 +26,8 @@ class DNNLayer(nn.Layer):
         self.sparse_feature_dim = sparse_feature_dim
         self.fc_sizes = fc_sizes
 
+        #   sparse_feature_number: 600000
+        #   sparse_feature_dim: 9
         self.embedding = paddle.nn.Embedding(
             self.sparse_feature_number,
             self.sparse_feature_dim,
@@ -38,6 +40,7 @@ class DNNLayer(nn.Layer):
         sizes = [63] + self.fc_sizes + [1]
         acts = ["relu" for _ in range(len(self.fc_sizes))] + ["sigmoid"]
         self._layers = []
+        #   fc_sizes: [512, 256, 128, 32]
         for i in range(len(self.fc_sizes) + 1):
             linear = paddle.nn.Linear(
                 in_features=sizes[i],

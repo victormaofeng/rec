@@ -13,6 +13,9 @@
 # limitations under the License.
 
 from __future__ import print_function
+
+import pdb
+
 import numpy as np
 from paddle.io import IterableDataset
 
@@ -83,4 +86,6 @@ class RecDataset(IterableDataset):
                         np.array(output[-1][1]).astype("float32"))
                     # list
                     # print("output_list",output_list)
+                    # pdb.set_trace()
+
                     yield output_list

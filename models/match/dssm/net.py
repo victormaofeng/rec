@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import pdb
 
 import paddle
 import paddle.nn as nn
@@ -19,6 +20,9 @@ import numpy as np
 
 
 class DSSMLayer(nn.Layer):
+    """
+    双塔模型
+    """
     def __init__(self, trigram_d, neg_num, slice_end, hidden_layers,
                  hidden_acts):
         super(DSSMLayer, self).__init__()
@@ -27,6 +31,7 @@ class DSSMLayer(nn.Layer):
         self.hidden_acts = hidden_acts
         self.slice_end = slice_end
 
+        # 用户塔
         self._query_layers = []
         for i in range(len(self.hidden_layers) - 1):
             linear = paddle.nn.Linear(
@@ -47,6 +52,7 @@ class DSSMLayer(nn.Layer):
                 self.add_sublayer('query_act_%d' % i, act)
                 self._query_layers.append(act)
 
+        # 物品塔
         self._doc_layers = []
         for i in range(len(self.hidden_layers) - 1):
             linear = paddle.nn.Linear(
@@ -94,8 +100,15 @@ class DSSMLayer(nn.Layer):
             R_Q_D_n = F.cosine_similarity(
                 query_fc, doc_neg_fc_i, axis=1).reshape([-1, 1])
             R_Q_D_ns.append(R_Q_D_n)
+
         concat_Rs = paddle.concat(x=[R_Q_D_p] + R_Q_D_ns, axis=1)
+
+
         prob = F.softmax(concat_Rs, axis=1)
+
         hit_prob = paddle.slice(
             prob, axes=[0, 1], starts=[0, 0], ends=[self.slice_end, 1])
+
+        # pdb.set_trace()
+
         return R_Q_D_p, hit_prob

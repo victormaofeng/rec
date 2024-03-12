@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+logid:101021632 time:975113619 userid:51792 gender:113968 age:567871 occupation:313614 movieid:229145 title:555056 title:467516 title:0 title:0 genres:443405 genres:0 genres:0 label:5
+"""
 
 from __future__ import print_function
 import numpy as np

@@ -98,11 +98,14 @@ def create_data_loader(config, place, mode="train"):
     num_workers = int(config.get('runner.num_workers', 0))
     config_abs_dir = config.get("config_abs_dir", None)
     data_dir = os.path.join(config_abs_dir, data_dir)
+    # 获取train/data文件夹下的所有文件
     file_list = [os.path.join(data_dir, x) for x in os.listdir(data_dir)]
+
     user_define_reader = config.get('runner.user_define_reader', False)
     logger.info("reader path:{}".format(reader_path))
     from importlib import import_module
     reader_class = import_module(reader_path)
+    # 加载 DataLoader
     dataset = reader_class.RecDataset(file_list, config=config)
     loader = DataLoader(
         dataset,
@@ -114,6 +117,10 @@ def create_data_loader(config, place, mode="train"):
 
 
 def load_dy_model_class(abs_dir):
+    """
+    加载模型
+    加载 dygraph_model.py 的 DygraphModel类
+    """
     sys.path.append(abs_dir)
     from dygraph_model import DygraphModel
     dy_model = DygraphModel()

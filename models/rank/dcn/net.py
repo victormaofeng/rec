@@ -16,13 +16,26 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 import math
+import pdb
 
 
 class DeepCroLayer(nn.Layer):
+    """
+    dcn cnn 和 dnn 并行连接
+
+    数据集介绍：
+    criteo数据集用于广告点击率预估任务（标签：0/1）；其中包含13个dense特征和26个sparse特征；
+    数据格式如下：第一列为label, 之后分别是13个dense特征(integer feature)，
+    26个sparse特征(categorical feature)；每列之间使用tab进行分隔
+
+    """
     def __init__(self, sparse_feature_number, sparse_feature_dim,
                  dense_feature_dim, sparse_num_field, layer_sizes, cross_num,
                  clip_by_norm, l2_reg_cross, is_sparse):
         super(DeepCroLayer, self).__init__()
+        #   sparse_feature_number: 1000001
+        #   sparse_feature_dim: 9
+        #   dense_input_dim: 13
         self.sparse_feature_number = sparse_feature_number
         self.sparse_feature_dim = sparse_feature_dim
         self.dense_feature_dim = dense_feature_dim
@@ -75,11 +88,12 @@ class DeepCroLayer(nn.Layer):
                 std=self.init_value_ /
                 math.sqrt(float(self.sparse_feature_dim))))
 
-        # DNN
+        # DNN 深度网络 deep NN
         self.num_field = self.dense_feature_dim + self.sparse_num_field * self.sparse_feature_dim
         sizes = [self.num_field] + self.layer_sizes
         acts = ["relu" for _ in range(len(self.layer_sizes))] + [None]
         self._mlp_layers = []
+        # fc_sizes: [512, 256, 128]  # , 32]
         for i in range(len(self.layer_sizes)):
             linear = paddle.nn.Linear(
                 in_features=sizes[i],
@@ -94,6 +108,7 @@ class DeepCroLayer(nn.Layer):
                 self.add_sublayer('act_%d' % i, act)
                 self._mlp_layers.append(act)
 
+        # 最后的全连接层
         self.fc = paddle.nn.Linear(
             in_features=self.layer_sizes[-1] + self.sparse_num_field *
             self.sparse_feature_dim + self.dense_feature_dim,
@@ -105,15 +120,25 @@ class DeepCroLayer(nn.Layer):
                               self.dense_feature_dim))))
 
     def _create_embedding_input(self, sparse_inputs, dense_inputs):
+        """
+
+        """
+        # 合并离散特征 sparse_inputs_concat.shape = [8,26]
         sparse_inputs_concat = paddle.concat(sparse_inputs, axis=1)
+        # 对离散特征做embedding  sparse_embeddings.shape=[8,26,9]
         sparse_embeddings = self.embedding(sparse_inputs_concat)
+
         sparse_embeddings_re = paddle.reshape(
             sparse_embeddings,
             shape=[-1, self.sparse_num_field * self.sparse_feature_dim])
+        # 拼接离散特征和连续特征
         feat_embeddings = paddle.concat([sparse_embeddings_re, dense_inputs],
                                         1)
+
+        pdb.set_trace()
         return feat_embeddings
 
+    # 交叉层
     def _cross_layer(self, input_0, input_x):
         input_w = paddle.multiply(input_x, self.layer_w)
         input_w1 = paddle.sum(input_w, axis=1, keepdim=True)
@@ -125,6 +150,7 @@ class DeepCroLayer(nn.Layer):
 
         return input_layer, input_w
 
+    # 交叉网络
     def _cross_net(self, input, num_corss_layers):
         x = x0 = input
         l2_reg_cross_list = []
@@ -138,6 +164,9 @@ class DeepCroLayer(nn.Layer):
         return paddle.sum(paddle.square(w))
 
     def forward(self, sparse_inputs, dense_inputs):
+
+        pdb.set_trace()
+
         feat_embeddings = self._create_embedding_input(sparse_inputs,
                                                        dense_inputs)
         cross_out, l2_reg_cross_loss = self._cross_net(feat_embeddings,
