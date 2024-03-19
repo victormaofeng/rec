@@ -21,7 +21,7 @@ def process(path):
     打印结果：
     863726088	time:976071485	userid:545	gender:M	age:35	occupation:17	movieid:2763	title:Thomas Crown Affair, The (1999)	genres:Action Thriller	label:2
     """
-    user_dict = parse_data(data_path + "/users.dat", user_fea)
+    user_dict = parse_user_data(data_path + "/users.dat", user_fea)
     movie_dict = parse_movie_data(data_path + "/movies.dat", movie_fea)
 
     for line in open(path, encoding='ISO-8859-1'):
@@ -35,7 +35,13 @@ def process(path):
         print("%s\t%s" % (log_id, out_str))
 
 
-def parse_data(file_name, feas):
+def parse_user_data(file_name, feas):
+    """
+    返回值：
+    {
+       'userid':'userid:gender:age:occupation'
+    }
+    """
     dict = {}
     for line in open(file_name, encoding='ISO-8859-1'):
         line = line.strip()
@@ -46,6 +52,13 @@ def parse_data(file_name, feas):
 
         dict[arr[0]] = out_str.strip()
     return dict
+
+
+
+
+
+
+
 
 
 def parse_movie_data(file_name, feas):
@@ -132,7 +145,7 @@ def generate_online_user():
 
 
 def generate_online_data(path):
-    user_dict = parse_data(data_path + "/users.dat", user_fea)
+    user_dict = parse_user_data(data_path + "/users.dat", user_fea)
     movie_dict = parse_movie_data(data_path + "/movies.dat", movie_fea)
 
     for line in open(path, encoding='ISO-8859-1'):

@@ -60,6 +60,8 @@ for line in lines:
             pos_dict[line[0]] = [line[1]]
 
 print("build dict done")
+
+
 #划分训练集和测试集
 query_list = list(pos_dict.keys())
 #print(len(query_list))

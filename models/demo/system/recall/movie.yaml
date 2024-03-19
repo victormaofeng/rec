@@ -15,8 +15,8 @@
 runner:
   train_data_dir: "../data/train"
   train_reader_path: "reader"  # importlib format
-  train_batch_size: 128
-  model_save_path: "output_model_rank"
+  train_batch_size: 1
+  model_save_path: "movie_model"
 
   use_gpu: True
   epochs: 5
@@ -24,12 +24,17 @@ runner:
   
   test_data_dir: "../data/test"
   infer_reader_path: "reader"  # importlib format
-  infer_batch_size: 128
-  infer_load_path: "output_model_rank"
+  infer_batch_size: 1
+  infer_load_path: "movie_model"
   infer_start_epoch: 4
   infer_end_epoch: 5
 
-  runner_result_dump_path: "rank_infer_result"
+  runner_result_dump_path: "recall_infer_result"
+
+  #use inference save model
+  use_inference: True
+  save_inference_feed_varnames: ["movieid", "title", "genres"]
+  save_inference_fetch_varnames: ["linear_15.tmp_1"]
 
 # hyper parameters of user-defined network
 hyper_parameters:

@@ -76,8 +76,7 @@ class DNNLayer(nn.Layer):
             emb = paddle.reshape(emb, shape=[-1, self.sparse_feature_dim])
             mov_sparse_embed_seq.append(emb)
 
-        features = paddle.concat(
-            user_sparse_embed_seq + mov_sparse_embed_seq, axis=1)
+        features = paddle.concat(user_sparse_embed_seq + mov_sparse_embed_seq, axis=1)
 
         for n_layer in self._layers:
             features = n_layer(features)

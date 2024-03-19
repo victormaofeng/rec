@@ -11,17 +11,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import pdb
 
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 import math
 import numpy as np
+import os
+import sys
+
+from models.demo.system.base.dcn_v2 import DCN_V2_Net
 
 
-class DNNLayer(nn.Layer):
+class DssmNet(nn.Layer):
+    """
+    双塔模型
+
+    内部采用 DCN 特征交叉网络
+    """
+
     def __init__(self, sparse_feature_number, sparse_feature_dim, fc_sizes):
-        super(DNNLayer, self).__init__()
+        super(DssmNet, self).__init__()
         self.sparse_feature_number = sparse_feature_number
         self.sparse_feature_dim = sparse_feature_dim
         self.fc_sizes = fc_sizes
@@ -34,40 +45,23 @@ class DNNLayer(nn.Layer):
             weight_attr=paddle.ParamAttr(
                 name="SparseFeatFactors",
                 initializer=paddle.nn.initializer.Uniform()))
-        # [512, 256, 128, 32]
-        user_sizes = [36] + self.fc_sizes
-        acts = ["relu" for _ in range(len(self.fc_sizes))]
-        self._user_layers = []
-        for i in range(len(self.fc_sizes)):
-            linear = paddle.nn.Linear(
-                in_features=user_sizes[i],
-                out_features=user_sizes[i + 1],
-                weight_attr=paddle.ParamAttr(
-                    initializer=paddle.nn.initializer.Normal(
-                        std=1.0 / math.sqrt(user_sizes[i]))))
-            self.add_sublayer('linear_user_%d' % i, linear)
-            self._user_layers.append(linear)
-            if acts[i] == 'relu':
-                act = paddle.nn.ReLU()
-                self.add_sublayer('user_act_%d' % i, act)
-                self._user_layers.append(act)
 
-        movie_sizes = [27] + self.fc_sizes
-        acts = ["relu" for _ in range(len(self.fc_sizes))]
-        self._movie_layers = []
-        for i in range(len(self.fc_sizes)):
-            linear = paddle.nn.Linear(
-                in_features=movie_sizes[i],
-                out_features=movie_sizes[i + 1],
-                weight_attr=paddle.ParamAttr(
-                    initializer=paddle.nn.initializer.Normal(
-                        std=1.0 / math.sqrt(movie_sizes[i]))))
-            self.add_sublayer('linear_movie_%d' % i, linear)
-            self._movie_layers.append(linear)
-            if acts[i] == 'relu':
-                act = paddle.nn.ReLU()
-                self.add_sublayer('movie_act_%d' % i, act)
-                self._movie_layers.append(act)
+        self.user_net = DCN_V2_Net(layer_sizes=[512, 256, 128], cross_num=2,
+                                   input_size=36, is_stacked=True,
+                                   use_low_rank_mixture=True,
+                                   low_rank=32, num_experts=4)
+
+        self.movie_pre_layer = paddle.nn.Linear(
+            in_features=27,
+            out_features=36,
+            weight_attr=paddle.ParamAttr(
+                initializer=paddle.nn.initializer.Normal(
+                    std=1.0 / math.sqrt(27))))
+
+        self.movie_net = DCN_V2_Net(layer_sizes=[512, 256, 128], cross_num=2,
+                                    input_size=36, is_stacked=True,
+                                    use_low_rank_mixture=True,
+                                    low_rank=32, num_experts=4)
 
     def forward(self, batch_size, user_sparse_inputs, mov_sparse_inputs,
                 label_input):
@@ -89,11 +83,12 @@ class DNNLayer(nn.Layer):
         user_features = paddle.concat(user_sparse_embed_seq, axis=1)
         mov_features = paddle.concat(mov_sparse_embed_seq, axis=1)
 
-        for n_layer in self._user_layers:
-            user_features = n_layer(user_features)
+        # pdb.set_trace()
 
-        for n_layer in self._movie_layers:
-            mov_features = n_layer(mov_features)
+        user_features = self.user_net(user_features)
+
+        mov_features = self.movie_pre_layer(mov_features)
+        mov_features = self.movie_net(mov_features)
 
         sim = F.cosine_similarity(
             user_features, mov_features, axis=1).reshape([-1, 1])
