@@ -11,15 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pdb
+
+import math
 
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-import math
-import numpy as np
-import os
-import sys
 
 from models.demo.system.base.dcn_v2 import DCN_V2_Net
 
@@ -46,8 +43,8 @@ class DssmNet(nn.Layer):
                 name="SparseFeatFactors",
                 initializer=paddle.nn.initializer.Uniform()))
 
-        self.user_net = DCN_V2_Net(layer_sizes=[512, 256, 128], cross_num=2,
-                                   input_size=36, is_stacked=True,
+        self.user_net = DCN_V2_Net(layer_sizes=fc_sizes, cross_num=2,
+                                   input_size=36, is_stacked=False,
                                    use_low_rank_mixture=True,
                                    low_rank=32, num_experts=4)
 
@@ -58,8 +55,8 @@ class DssmNet(nn.Layer):
                 initializer=paddle.nn.initializer.Normal(
                     std=1.0 / math.sqrt(27))))
 
-        self.movie_net = DCN_V2_Net(layer_sizes=[512, 256, 128], cross_num=2,
-                                    input_size=36, is_stacked=True,
+        self.movie_net = DCN_V2_Net(layer_sizes=fc_sizes, cross_num=2,
+                                    input_size=36, is_stacked=False,
                                     use_low_rank_mixture=True,
                                     low_rank=32, num_experts=4)
 

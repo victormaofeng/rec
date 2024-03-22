@@ -52,8 +52,9 @@ def to_hash(feas, arr):
     hash_id = hash27(out_str) % dict_size
     # user 和 movie 部分信息存在hash碰撞
     if hash_id in hash_dict and hash_dict[hash_id] != out_str:
-        print(hash_id, out_str, hash(out_str), hash_dict[hash_id])
-        print("conflict")
+        pass
+        # print(hash_id, out_str, hash(out_str), hash_dict[hash_id])
+        # print("conflict")
         # exit(-1)
     hash_dict[hash_id] = out_str
     return hash_id
@@ -172,8 +173,8 @@ def parse_infer(mode, path, user_dict, movie_dict):
 
 if __name__ == "__main__":
     user_dict, movie_dict, ratings_dict = read_raw_data()
-    parse_infer('recall_offline','recall_infer_result',user_dict,movie_dict)
-    # if sys.argv[1] == "ground_truth":
-    #     load_ground_truth(user_dict, movie_dict, ratings_dict)
-    # else:
-    #     parse_infer(sys.argv[1], sys.argv[2], user_dict, movie_dict)
+    # parse_infer('recall_offline','recall_infer_result',user_dict,movie_dict)
+    if sys.argv[1] == "ground_truth":
+        load_ground_truth(user_dict, movie_dict, ratings_dict)
+    else:
+        parse_infer(sys.argv[1], sys.argv[2], user_dict, movie_dict)

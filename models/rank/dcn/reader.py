@@ -55,8 +55,7 @@ class RecDataset(IterableDataset):
                         if slot not in self.slots:
                             continue
                         if slot in self.sparse_slots:
-                            if slot_feasign[1] == None or slot_feasign[
-                                    1] == "":
+                            if slot_feasign[1] == None or slot_feasign[1] == "":
                                 continue
                             feasign = int(slot_feasign[1])
                         else:

@@ -16,7 +16,7 @@ runner:
   train_data_dir: "../data/train"
   train_reader_path: "reader"  # importlib format
   train_batch_size: 128
-  model_save_path: "output_model_recall"
+  model_save_path: "output_model_recall1"
 
   use_gpu: True
   epochs: 5
@@ -25,11 +25,11 @@ runner:
   test_data_dir: "../data/test"
   infer_reader_path: "reader"  # importlib format
   infer_batch_size: 128
-  infer_load_path: "output_model_recall"
+  infer_load_path: "output_model_recall1"
   infer_start_epoch: 4
   infer_end_epoch: 5
 
-  runner_result_dump_path: "recall_infer_result"
+  runner_result_dump_path: "recall_infer_result1"
 
 # hyper parameters of user-defined network
 hyper_parameters:
@@ -41,4 +41,4 @@ hyper_parameters:
   sparse_feature_number: 600000
   sparse_feature_dim: 9
   dense_input_dim: 13
-  fc_sizes: [512, 256, 128, 32]
+  fc_sizes: [512, 256, 128]

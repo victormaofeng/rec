@@ -119,6 +119,7 @@ def main(args):
         dy_model = fleet.distributed_model(dy_model)
 
     logger.info("read data")
+
     # 获取data_loader
     train_dataloader = create_data_loader(config=config, place=place)
 

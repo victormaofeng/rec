@@ -10,6 +10,8 @@ class DCN_V2_Net(nn.Layer):
     """
     两种模式：
     Model Structaul: Stacked or Parallel
+
+    网络 的 输入维度 == 输出维度
     """
 
     def __init__(self, layer_sizes: List[int], cross_num: int, input_size: int,
@@ -265,7 +267,7 @@ class CrossNetMix(nn.Layer):
 if __name__ == '__main__':
     net = DCN_V2_Net(layer_sizes=[768, 768], cross_num=2,
                      input_size=1024, is_stacked=True,
-                     use_low_rank_mixture=True,
+                     use_low_rank_mixture=False,
                      low_rank=256, num_experts=4)
     x = paddle.randn([8, 1024])
     p = net(x)
